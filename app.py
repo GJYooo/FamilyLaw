@@ -88,37 +88,6 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-@st.cache_data
-def load_local_data(selected_years):
-    # 만약 선택된 연도가 없으면 빈 데이터프레임 반환
-    if not selected_years:
-        return pd.DataFrame()
-    
-    combined_df = pd.DataFrame()
-    
-    for year in selected_years:
-        filename = f"{year}.csv"
-        if os.path.exists(filename):
-            try:
-                # UTF-8-SIG (한글 깨짐 방지)
-                df = pd.read_csv(filename, encoding='utf-8-sig')
-            except:
-                # 일반적인 한글 인코딩(CP949) 시도
-                df = pd.read_csv(filename, encoding='cp949')
-
-            df['연도'] = str(year).replace(".0", "")
-            
-            combined_df = pd.concat([combined_df, df], ignore_index=True)
-            
-    return combined_df
-
-@st.cache_data(ttl=600) 
-def fetch_sheet_data(url):
-    try:
-        return pd.read_csv(url)
-    except:
-        return None
-
 # --- [데이터 로드 및 업데이트 로직] ---
 @st.cache_data
 def load_data_from_excel(selected_years):
@@ -194,49 +163,6 @@ with st.sidebar:
     else:
         st.caption("진행 중인 시험이 없습니다.")
 
-    st.divider()
-
-# [2] 진행상황 불러오기 수정본 (호환성 및 가짜에러 방지)
-    up_json = st.file_uploader("📤 진행상황 불러오기", type="json", key=f"json_up_{st.session_state.uploader_key}")
-    if up_json:
-        try:
-            data = json.load(up_json)
-            
-            # --- 호환성 체크: 키가 없으면 기본값 사용 (.get 사용) ---
-            restored_years = data.get("selected_years", [2026])
-            st.session_state.selected_years = restored_years 
-            
-            # 데이터 로드
-            st.session_state.db = load_local_data(restored_years)
-                
-            # 진행 상태 복구 (키가 없어도 에러나지 않게 .get 활용)
-            st.session_state.exam_list = data.get("exam_list", [])
-            st.session_state.idx = data.get("idx", 0)
-            st.session_state.correct_count = data.get("correct_count", 0)
-            st.session_state.total_solving_time = data.get("total_solving_time", 0.0)
-            
-            if "wrong_notes" in data:
-                st.session_state.wrong_notes = pd.DataFrame(data["wrong_notes"])
-            
-            st.session_state.answered = False
-            st.session_state.q_start_time = time.time()
-            st.session_state.uploader_key += 1 # 성공했으니 업로더 비우기
-            
-            st.toast("복구가 완료되었습니다! 🎉")
-            time.sleep(0.5)
-            
-            should_rerun = True 
-
-        except Exception as e:
-            # RerunException인 경우 에러 메시지를 띄우지 않음
-            if "Rerun" not in str(type(e)):
-                st.error(f"진짜 복구 실패: {e}")
-            else:
-                should_rerun = True
-
-    if 'should_rerun' in locals() and should_rerun:
-        st.rerun()
-            
     st.divider()
     
     available_years = [2020, 2021, 2022, 2023, 2024, 2025, 2026]
