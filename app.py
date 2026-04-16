@@ -243,7 +243,7 @@ with tab1:
                 clean_question = str(q["문제"]).replace('<', '〈').replace('>', '〉').replace("\n", "<br>")
 
                 # 화면에 출력
-                st.markdown(f'<div class="question-box"><b>[{raw_year_display}년]</b>{update_tag}<br><br>{clean_question}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="question-box"><b>[{raw_year_display}년]</b><br>{clean_question}</div>', unsafe_allow_html=True)
                 
                 user_input = None
                 b_cols = st.columns(3)
@@ -383,7 +383,7 @@ with tab2:
         raw_year_wn_display = str(q_wn.get('연도', '미분류')).split('.')[0]
         clean_question_wn = str(q_wn["문제"]).replace('<', '〈').replace('>', '〉').replace("\n", "<br>")
             
-        st.markdown(f'<div class="question-box"><b>[{raw_year_wn_display}년]</b>{update_tag_wn}<br><br>{clean_question_wn}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="question-box"><b>[{raw_year_wn_display}년]</b><br>{clean_question_wn}</div>', unsafe_allow_html=True)
         
         # 정답 입력 버튼 섹션
         cw1, cw2 = st.columns(2)
