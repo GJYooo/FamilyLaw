@@ -42,6 +42,7 @@ st.markdown("""
         font-size: 1.1rem;
         font-weight: 500;
         line-height: 1.5;
+        white-space: pre-wrap; 
     }
     
     /* 버튼 디자인 */
@@ -239,12 +240,8 @@ with tab1:
                     st.session_state.q_start_time = time.time()
 
                 raw_year_display = str(q.get('연도', '미분류')).split('.')[0]
-                clean_question = str(q["문제"]).replace('<', '〈').replace('>', '〉')
+                clean_question = str(q["문제"]).replace('<', '〈').replace('>', '〉').replace("\n", "<br>")
 
-                update_tag = ""
-                if q.get('해설업데이트') == True:
-                    update_tag = " <span style='color: #ff4b4b; font-size: 0.8rem; border: 1px solid #ff4b4b; padding: 2px 5px; border-radius: 5px; margin-left: 10px;'>해설 업데이트</span>"
-                
                 # 화면에 출력
                 st.markdown(f'<div class="question-box"><b>[{raw_year_display}년]</b>{update_tag}<br><br>{clean_question}</div>', unsafe_allow_html=True)
                 
@@ -299,7 +296,8 @@ with tab1:
                     with st.expander("📖 해설 보기", expanded=True):
                         current_correct_ans = str(q['정답']).strip().upper()
                         st.markdown(f"### 정답: {current_correct_ans}") 
-                        st.write(st.session_state.last_exp)
+                        exp_text = str(st.session_state.last_exp).replace("\n", "<br>")
+                        st.markdown(f'<div style="white-space: pre-wrap;">{exp_text}</div>', unsafe_allow_html=True)
                     
                     c_n1, c_n2 = st.columns(2)
                     with c_n1:
@@ -383,11 +381,7 @@ with tab2:
         # 현재 인덱스의 오답 가져오기
         q_wn = wn.iloc[st.session_state.wn_idx]
         raw_year_wn_display = str(q_wn.get('연도', '미분류')).split('.')[0]
-        clean_question_wn = str(q_wn["문제"]).replace('<', '〈').replace('>', '〉')
-
-        update_tag_wn = ""
-        if q_wn.get('해설업데이트') == True:
-            update_tag_wn = " <span style='color: #ff4b4b; font-size: 0.8rem; border: 1px solid #ff4b4b; padding: 2px 5px; border-radius: 5px; margin-left: 10px;'>해설 업데이트</span>"
+        clean_question_wn = str(q_wn["문제"]).replace('<', '〈').replace('>', '〉').replace("\n", "<br>")
             
         st.markdown(f'<div class="question-box"><b>[{raw_year_wn_display}년]</b>{update_tag_wn}<br><br>{clean_question_wn}</div>', unsafe_allow_html=True)
         
@@ -421,7 +415,8 @@ with tab2:
             
             with st.expander("📖 해설 확인", expanded=True):
                 st.markdown(f"### 정답: {c_wn_ans}")
-                st.write(q_wn['해설'])
+                exp_text = str(st.session_state.last_exp).replace("\n", "<br>")
+                st.markdown(f'<div style="white-space: pre-wrap;">{exp_text}</div>', unsafe_allow_html=True)
 
         st.markdown("---")
         if st.button("✅ 오답노트에서 이 문제 제거", use_container_width=True, key="remove_from_wn_manual_permanent", shortcut="d"): # 버튼 key 변경
