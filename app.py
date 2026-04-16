@@ -208,9 +208,6 @@ with st.sidebar:
             
             # 데이터 로드
             st.session_state.db = load_local_data(restored_years)
-            if st.session_state.auto_update:
-                logs = update_from_sheets(st.session_state.selected_years)
-                st.session_state.update_history = logs
                 
             # 진행 상태 복구 (키가 없어도 에러나지 않게 .get 활용)
             st.session_state.exam_list = data.get("exam_list", [])
