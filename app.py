@@ -29,13 +29,8 @@ def play_sound(file_path):
             """
         st.markdown(md, unsafe_allow_html=True)
 
-@st.dialog("📖 사용방법 가이드", width="large")
-def show_manual():
-    st.image("manual.png", use_container_width=True)
-    st.caption("닫으려면 창 바깥쪽을 클릭하거나 우측 상단 X를 누르세요.")
-
 # --- [페이지 설정 및 CSS] ---
-st.set_page_config(page_title="2026 형실연 연습 (Single DB)", layout="wide", page_icon="⚖️")
+st.set_page_config(page_title="2026 민실연 가족법", layout="wide", page_icon="⚖️")
 
 st.markdown("""
     <style>
@@ -179,7 +174,7 @@ with st.sidebar:
         except: st.error("CSV 복구 실패")
 
 # --- [메인 화면] ---
-st.title("⚖️ 2026 형실연 중간고사 연습")
+st.title("⚖️ 2026 민실연 중간고사 가족법")
 
 tab1, tab2, tab3 = st.tabs(["📝 문제 풀이", "❌ 오답 집중 복습", "📚 전체 조회"])
 
@@ -321,7 +316,6 @@ with tab3:
 # 하단 정보
 st.sidebar.markdown("""
 <div style="font-size: 0.8rem; color: gray; margin-top: 20px;">
-16기 유각준 제작<br>
-Single Data File Version
+16기 유각준<br>
 </div>
 """, unsafe_allow_html=True)
