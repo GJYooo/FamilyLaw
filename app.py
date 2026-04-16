@@ -25,25 +25,8 @@ def play_sound(file_path):
         """
     st.markdown(md, unsafe_allow_html=True)
 
-
-# --- [팝업창 함수 정의] ---
-@st.dialog("📖 사용방법 가이드", width="large")
-def show_manual():
-    st.image("manual.png", use_container_width=True)
-    st.caption("닫으려면 창 바깥쪽을 클릭하거나 우측 상단 X를 누르세요.")
-
 # --- [설정] 페이지 레이아웃 및 디자인 ---
-st.set_page_config(page_title="2026 형실연 중간고사 연습", layout="wide", page_icon="⚖️")
-
-SHEET_ID = "14ShaWll86F40k94P_M40aq8TNwB19a3XvO1w6Xxik1s"
-GID_MAP = {
-    2021: "2095370762",
-    2022: "1893230281",
-    2023: "1090949368",
-    2024: "781284367",
-    2025: "251633672",
-    2026: "0"
-}
+st.set_page_config(page_title="2026 민실연 가족법 연습", layout="wide", page_icon="⚖️")
 
 # CSS: 가독성 및 디자인
 st.markdown("""
@@ -107,64 +90,18 @@ st.markdown("""
 
 # --- [데이터 로드 및 업데이트 로직] ---
 @st.cache_data
-def load_local_data(years):
-    combined_df = pd.DataFrame()
-    for year in years:
-        filename = f"{year}.csv"
-        if os.path.exists(filename):
-            try:
-                df = pd.read_csv(filename, encoding='utf-8-sig')
-                df['연도'] = str(year) 
-                combined_df = pd.concat([combined_df, df], ignore_index=True)
-            except:
-                df = pd.read_csv(filename, encoding='utf-8')
-                df['연도'] = str(year)
-                combined_df = pd.concat([combined_df, df], ignore_index=True)
-    return combined_df
-
-@st.cache_data(ttl=600) 
-def fetch_sheet_data(url):
-    try:
-        return pd.read_csv(url)
-    except:
-        return None
-        
-def update_from_sheets(selected_years):
-    update_log = []
-    if not st.session_state.db.empty:
-        for year in selected_years:
-            gid = GID_MAP.get(year, "0")
-            url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={gid}"
-            try:
-                sheet_df = fetch_sheet_data(url)
-                for _, row in sheet_df.iterrows():
-                    problem = row['문제']
-                    new_exp = row['해설']
-                    
-                    # A. 전체 DB 업데이트 및 마킹
-                    mask = st.session_state.db['문제'] == problem
-                    if mask.any():
-                        old_exp = st.session_state.db.loc[mask, '해설'].values[0]
-                        if str(old_exp) != str(new_exp):
-                            st.session_state.db.loc[mask, '해설'] = new_exp
-                            st.session_state.db.loc[mask, '해설업데이트'] = True # 🏷️ 마킹 추가
-                            
-                            update_log.append({"연도": f"{year}년", "문제": problem[:30] + "...", "이전 해설": old_exp, "바뀐 해설": new_exp})
-                    
-                    # B. 현재 풀고 있는 시험지(exam_list) 마킹
-                    for q_item in st.session_state.exam_list:
-                        if q_item['문제'] == problem:
-                            q_item['해설'] = new_exp
-                            q_item['해설업데이트'] = True # 🏷️ 마킹 추가
-                    
-                    # C. 현재 오답노트(wrong_notes) 마킹
-                    wn_mask = st.session_state.wrong_notes['문제'] == problem
-                    if wn_mask.any():
-                        st.session_state.wrong_notes.loc[wn_mask, '해설'] = new_exp
-                        st.session_state.wrong_notes.loc[wn_mask, '해설업데이트'] = True # 🏷️ 마킹 추가
-            except: continue
-    return update_log
-
+def load_data_from_excel(selected_years):
+    if not os.path.exists("data.xlsx"):
+        return pd.DataFrame()
+    
+    df = pd.read_excel("data.xlsx")
+    # 연도를 문자열로 변환 (기존 코드와의 호환성)
+    df['연도'] = df['연도'].astype(str).str.replace(".0", "", regex=False)
+    
+    if selected_years:
+        selected_years_str = [str(y) for y in selected_years]
+        df = df[df['연도'].isin(selected_years_str)]
+    return df
 
 # --- [세션 상태 초기화] ---
 if 'db' not in st.session_state:
@@ -173,8 +110,6 @@ if 'selected_years' not in st.session_state:
     st.session_state.selected_years = [2026] # 초기 연도 설정
 if 'last_restored_file' not in st.session_state:
     st.session_state.last_restored_file = None # 중복 복구 방지용
-if 'update_history' not in st.session_state:
-    st.session_state.update_history = []
 if 'wrong_notes' not in st.session_state:
     st.session_state.wrong_notes = pd.DataFrame(columns=['문제', '정답', '해설', '연도'])
 if 'exam_list' not in st.session_state:
@@ -195,8 +130,6 @@ if 'correct_count' not in st.session_state:
     st.session_state.correct_count = 0
 if 'sound_on' not in st.session_state:
     st.session_state.sound_on = True  # 기본값은 '켜짐'
-if 'auto_update' not in st.session_state:
-    st.session_state.auto_update = True
 if 'exam_finished_celebrated' not in st.session_state:
     st.session_state.exam_finished_celebrated = False
 
@@ -205,13 +138,7 @@ if 'exam_finished_celebrated' not in st.session_state:
 with st.sidebar:
     st.title("⚖️ 설정")
     st.toggle("🔊 효과음 활성화", key="sound_on")
-    st.toggle("🌐 자동 해설 업데이트", key="auto_update", help="데이터를 불러올 때 구글 시트(집단지성)의 해설을 자동으로 반영합니다.")
     st.divider()
-
-    if st.button("📖 사용방법 보기", use_container_width=True):
-        show_manual()
-    st.divider()
-
 
     st.subheader("⏯️ 시험 진행상황")
     
@@ -284,9 +211,12 @@ with st.sidebar:
             
     st.divider()
     
-    st.subheader("📅 범위 선택")
-    available_years = [2021, 2022, 2023, 2024, 2025, 2026]
+    available_years = [2020, 2021, 2022, 2023, 2024, 2025, 2026]
     st.multiselect("학습 연도 선택", available_years, key="selected_years")
+    
+    if st.button("📁 data.xlsx에서 불러오기", use_container_width=True):
+        st.session_state.db = load_data_from_excel(st.session_state.selected_years)
+        st.success(f"{len(st.session_state.db)}개 문항 로드 완료!")
     
     # 기본 데이터 로드 버튼
     if st.button("📁 선택 범위 데이터 불러오기", use_container_width=True):
