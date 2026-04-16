@@ -214,27 +214,9 @@ with st.sidebar:
     available_years = [2020, 2021, 2022, 2023, 2024, 2025, 2026]
     st.multiselect("학습 연도 선택", available_years, key="selected_years")
     
-    if st.button("📁 data.xlsx에서 불러오기", use_container_width=True):
+    if st.button("📁 데이터 불러오기", use_container_width=True):
         st.session_state.db = load_data_from_excel(st.session_state.selected_years)
         st.success(f"{len(st.session_state.db)}개 문항 로드 완료!")
-    
-    # 기본 데이터 로드 버튼
-    if st.button("📁 선택 범위 데이터 불러오기", use_container_width=True):
-        st.session_state.db = load_local_data(st.session_state.selected_years)
-        if st.session_state.auto_update:
-            with st.spinner("최신 해설 동기화 중..."):
-                logs = update_from_sheets(st.session_state.selected_years)
-                st.session_state.update_history = logs
-                if logs:
-                    st.toast(f"{len(logs)}건의 해설이 실시간 반영되었습니다! 🎉")
-                else:
-                    st.toast("이미 최신 상태입니다. ✅")
-                time.sleep(0.5)
-                st.rerun()
-            st.success(f"{len(st.session_state.db)}개 문항 로드 및 해설 동기화 완료!")
-        else:
-            st.session_state.update_history = []
-            st.success(f"{len(st.session_state.db)}개 문항 로드 완료!")
 
     st.divider()
 
