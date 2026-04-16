@@ -88,6 +88,37 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+@st.cache_data
+def load_local_data(selected_years):
+    # 만약 선택된 연도가 없으면 빈 데이터프레임 반환
+    if not selected_years:
+        return pd.DataFrame()
+    
+    combined_df = pd.DataFrame()
+    
+    for year in selected_years:
+        filename = f"{year}.csv"
+        if os.path.exists(filename):
+            try:
+                # UTF-8-SIG (한글 깨짐 방지)
+                df = pd.read_csv(filename, encoding='utf-8-sig')
+            except:
+                # 일반적인 한글 인코딩(CP949) 시도
+                df = pd.read_csv(filename, encoding='cp949')
+
+            df['연도'] = str(year).replace(".0", "")
+            
+            combined_df = pd.concat([combined_df, df], ignore_index=True)
+            
+    return combined_df
+
+@st.cache_data(ttl=600) 
+def fetch_sheet_data(url):
+    try:
+        return pd.read_csv(url)
+    except:
+        return None
+
 # --- [데이터 로드 및 업데이트 로직] ---
 @st.cache_data
 def load_data_from_excel(selected_years):
