@@ -237,17 +237,6 @@ with st.sidebar:
             st.success(f"{len(st.session_state.db)}개 문항 로드 완료!")
 
     st.divider()
-    
-    # 업데이트 내역 확인 버튼 (내역이 있을 때만 표시)
-    if st.session_state.update_history:
-        with st.expander("🔍 최근 업데이트 내역 확인"):
-            for log in st.session_state.update_history:
-                st.markdown(f"**[{log.get('연도', '미분류')}]** {log.get('문제', '문제 정보 없음')}")
-                st.caption(f"이전: {log.get('이전 해설', '정보 없음')}")
-                st.markdown(f"새해설: {log.get('바뀐 해설', '정보 없음')}")
-                st.divider()
-    
-    should_rerun = False
 
     st.subheader("💾 데이터 관리")
     csv_dn = st.session_state.wrong_notes.to_csv(index=False).encode('utf-8-sig')
@@ -271,12 +260,11 @@ with st.sidebar:
     <div class="copyright">
     <br>
     16기 유각준 <br>
-    (15기 김새봄 선배님이 배포하신 프로그램 및 데이터를 이용하여 만듬)<br>
     </div>    
     """, unsafe_allow_html=True)
 
 # --- [메인 화면] ---
-st.title("⚖️ 2026 형실연 중간고사 연습")
+st.title("⚖️ 2026 민실연 중간고사 가족법 연습")
 
 tab1, tab2, tab3 = st.tabs(["📝 중간고사 연습", "❌ 오답 집중 복습", "📚 전체 조회"])
 
